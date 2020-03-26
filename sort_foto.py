@@ -8,25 +8,16 @@ import os
 import shutil
 import sys
 
-
-
-
-def get_decimal_from_dms(dms, ref):
-    '''
-    Convert Exif Data for values of longitude and latitude
-    to geo coordiantes
-    '''
-    degrees = dms[0][0] / dms[0][1]
-    minutes = dms[1][0] / dms[1][1] / 60.0
-    seconds = dms[2][0] / dms[2][1] / 3600.0
-    
-    if ref in ['S', 'W']:
-        degrees = -degrees
-        minutes = -minutes
-        seconds = -seconds
-    
-    return round(degrees + minutes + seconds, 5)
-    
+'''
+Anpassungen:
+dicts für date und location 
+iphone_data für location überprüfen
+Foto_info erweitern um date Funktionen
+search_date oder folder_structure erstellen
+geo to location implementieren
+GUI kivy
+pytoexe
+'''
 
 
 class Data_info:
@@ -103,10 +94,11 @@ class Fotoinfo:
     '''
     Class to store the important information of every Foto in an Object
     '''    
-    def __init__(self, img,image_name, path_dest):
+    def __init__(self, img,image_name, path_dest, path_origin):
         self.name = image_name
         self.foto = img
         self.path_dest = path_dest
+        self.path_origin = path_origin
         self.exif_data = self.get_exif_data()
         self.geo_coords = self.get_geotagging()
         #self.location = self.get_location()
@@ -127,6 +119,7 @@ class Fotoinfo:
             labeled = {}
             for (key, val) in exif.items():
                 labeled[TAGS.get(key)] = val
+            print(labeled)    
             return labeled
         except:
             count.count_noexif += 1
@@ -157,6 +150,22 @@ class Fotoinfo:
     def set_day(self,day_new):
         self.day = day_new
         
+    def get_decimal_from_dms(self, dms, ref):
+        '''
+        Convert Exif Data for values of longitude and latitude
+        to geo coordiantes
+        '''
+        degrees = dms[0][0] / dms[0][1]
+        minutes = dms[1][0] / dms[1][1] / 60.0
+        seconds = dms[2][0] / dms[2][1] / 3600.0
+        
+        if ref in ['S', 'W']:
+            degrees = -degrees
+            minutes = -minutes
+            seconds = -seconds
+        
+        return round(degrees + minutes + seconds, 5)
+    
     def get_geotagging(self):
         '''
         Read GPSInfo from EXIF DATA
@@ -174,9 +183,9 @@ class Fotoinfo:
                     geotags.append((key, gps[key]))
             dict_geotags = dict(geotags)        
             
-            lat = get_decimal_from_dms(dict_geotags[2], dict_geotags[1])
+            lat = self.get_decimal_from_dms(dict_geotags[2], dict_geotags[1])
         
-            lon = get_decimal_from_dms(dict_geotags[4], dict_geotags[3])
+            lon = self.get_decimal_from_dms(dict_geotags[4], dict_geotags[3])
                 
             return (lon, lat)  
         except:
@@ -264,7 +273,7 @@ def get_Data(image_path, path_dest, img_name, copy):
         return 
     if True:
     #try:    
-        image = Fotoinfo(img, img_name, path_dest)                                                             #check if picture has exif data
+        image = Fotoinfo(img, img_name, path_dest, image_path)                                                             #check if picture has exif data
         #loc = image.location
         if image.date:
             time_exif = datetime.strptime(image.date, "%Y:%m:%d %H:%M:%S")
@@ -290,6 +299,29 @@ def get_Data(image_path, path_dest, img_name, copy):
     #    e = sys.exc_info()[1]
     #    print( "<p>Error: %s</p>" % e )
 
+def get_images(path, path_destination, copy):
+    extensions_images = "JPG","jpg","jpeg","PNG","png","tiff","tif","TIF","BMP","bmp"
+    extensions_videos = "mov","MOV","mp4","MP4"
+    x = 0
+    for image in os.listdir(path):
+        x += 1
+        if x == 10: 
+             return
+        if image.endswith(extensions_images):                                              #get Data from fotos
+            get_Data(os.path.join(path, image), path_destination, image, copy)                
+            
+        if image.endswith(extensions_videos):                                              #get Data from videos
+            timestamp = os.path.getmtime(os.path.join(path, image))
+            time_mtime = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            count.updatevideo_years(int(time_mtime[0:4]), int(time_mtime[5:7]))
+            if copy:
+                year = int(time_mtime[0:4])
+                copy_file(os.path.join(path,  image), os.path.join(path_destination, "videos" ,str(year)), image, False)
+            if not copy:
+                count.count_videos += 1                                                     # count total number of images
+                count.update_memory(os.path.getsize(os.path.join(path, image))) 
+    return x
+
 
 def parse_fotos(path_origin, path_destination, copy):
     '''
@@ -298,31 +330,15 @@ def parse_fotos(path_origin, path_destination, copy):
     copy video based on year to new directory
     '''
     liste=[]
-    extensions_images = "JPG","jpg","jpeg","PNG","png","tiff","tif","TIF","BMP","bmp"
-    extensions_videos = "mov","MOV","mp4","MP4"
-    x = 0
     for directory, subDirectories, files in os.walk(path_origin):
         liste.append(files) 
-        for subDir in subDirectories:      
-            #path = os.path.join(directory, subDir)                             # nach und nach die einzelnen SUb Directories absuchen
-            for image in os.listdir(os.path.join(directory, subDir)):           # alle images einzeln auswerten
-                x = x+1
-                if x == 100: 
-                    return
-                if image.endswith(extensions_images):                                              #get Data from fotos
-                    get_Data(os.path.join(directory, subDir, image), path_destination, image, copy)                
-                    
-                if image.endswith(extensions_videos):                                              #get Data from videos
-                    timestamp = os.path.getmtime(os.path.join(directory, subDir, image))
-                    time_mtime = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                    count.updatevideo_years(int(time_mtime[0:4]), int(time_mtime[5:7]))
-                    if copy:
-                        year = int(time_mtime[0:4])
-                        copy_file(os.path.join(directory, subDir, image), os.path.join(path_destination, "videos" ,str(year)), image, False)
-                    if not copy:
-                        count.count_videos += 1                                                     # count total number of images
-                        count.update_memory(os.path.getsize(os.path.join(directory, subDir, image)))                            
-                    
+        
+            #path = os.path.join(directory, subDir)  
+        if files:
+            get_images(os.path.join(directory), path_destination, copy)
+        for subDir in subDirectories:               # nach und nach die einzelnen SUb Directories absuchen            
+            get_images(os.path.join(directory, subDir),path_destination, copy)           # alle images einzeln auswerten
+            break                       
                     
 def main():
     path_origin, path_destination = set_filepaths()
@@ -333,12 +349,16 @@ def main():
 
     #sort_fotos_bylocation(path_origin, path_destination)    
     
+    
+    
     print(count.dict_years) 
-    print(count.list_years_videos)
+    #print(count.list_years_videos)
 
     print(count.count_images)
-    print(count.count_videos)
+    #print(count.count_videos)
     print(int(count.memory_size_MB),"MB")
+
+
     
 if __name__ == "__main__":
     count = main()    
