@@ -7,13 +7,11 @@ from datetime import datetime
 import os
 import shutil
 import sys
+import geopy
 
 '''
 Anpassungen:
-copy_file fixen
-    - origin und dest path überprüfen
-    - video integrieren
-search_date oder folder_structure erstellen
+search_date erstellen
 geo to location implementieren
 GUI kivy
 pytoexe
@@ -37,8 +35,9 @@ class Data_info:
         self.list_years_videos = []
         self.list_locations = []        
         self.search_dict_date = {}
+        self.search_dict_date_video = {}
         self.search_dict_loc = {}
-        #sys.getsizeof(self.search_dict_date)
+    
     
     def update_search_dict_date(self, image_data):
         '''
@@ -54,6 +53,24 @@ class Data_info:
             self.search_dict_date[key].append(info)
         else:
             self.search_dict_date.update({key:[info]})
+       
+        
+    def update_search_dict_date_video(self, year , path_origin, path_dest, name):
+        '''
+        search_dict_date stores all dates for searching videos
+        (year,month,day) :  [[path_orig,path_dest, image_name],[path_orig,path_dest,image_name], ...] 
+        '''
+        key = year 
+        info = []
+        info.append(path_origin)
+        info.append(path_dest)
+        info.append(name)
+        
+        if key in self.search_dict_date_video:
+            self.search_dict_date_video[key].append(info)
+        else:
+            self.search_dict_date_video.update({key:[info]})
+           
             
     def update_search_dict_loc(self, image_data):
         '''
@@ -69,6 +86,8 @@ class Data_info:
             self.search_dict_loc[key].append(info)
         else:
             self.search_dict_loc.update({key:[info]})
+
+    '''__________________________________________________________________________________________'''
         
     def update_memory(self, file_size):
         '''updates the size of memory for all copied fotos''' 
@@ -90,20 +109,13 @@ class Data_info:
             return
         else:
             self.list_years_videos.append(year)
-            
-    def search_date(self, date):
-        '''
-        Opens the folder in which the fotos of the date(s) should be. 
-        Create new Folder "search - date"  
-        copy all Fotos that match the Date to folder. 
-        '''
-        pass 
-        
-        
+                        
         
 '''
 _____________________________________________________________________________________________________
 '''
+
+
 class Fotoinfo:
     '''
     Class to store the important information of every Foto in an Object
@@ -221,9 +233,10 @@ def set_filepaths():
     origin: folder from which you import the pictures
     destintion: folder where you will save the new folder structure
     '''
-    origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Test"
+    origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\I-Phone"
     destination = r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
-    return origin, destination
+    search = r"C:\Users\Rasmus\Desktop\Rasmus\Photos\search"
+    return origin, destination, search
 
 
 def month_to_foldername(month):
@@ -258,22 +271,51 @@ def build_folder_structure(path_dest, dict_images, list_videos ):
     for year in list_videos:
         if not os.path.exists(os.path.join(path_video, str(year))):
             os.makedirs(os.path.join(path_video, str(year)))
+
         
+def search_date(count, date, path_dest_date):
+    '''
+    Date (YYYY-MM-DD) und Path muss richtiges Format haben
+    Opens the folder in which the fotos of the date(s) should be. 
+    Create new Folder "search - date"  
+    copy all Fotos that match the Date to folder. 
+    '''
+    dictttt = count.search_dict_date      
+    if date in count.search_dict_date:
+        infos = count.search_dict_date[date]      # iterate over all days
+        year,month,day = date.split("-")    
+        for image_info in infos:                                                #iterate over all photos in list
+            path_origin = image_info[0]
+            shutil.copy2(path_origin, path_dest_date)    
+    else:
+        return False
+
         
-def copy_File(count):
+def copy_file(count):
     '''
     copy file from origin to destination
+    first images second vidoes
     '''
-    for date, infos in count.search_dict_date.items():
+    '''
+    for date, infos in count.search_dict_date.items():      # iterate over all days
         year,month,day = date.split("-")    
-        folder_name = month_to_foldername(month)
-        for path_origin, path_dest in zip(infos[0], infos[1]):
-            path_dest = os.path.join(path_dest, str(year), folder_name)
+        folder_name = month_to_foldername(int(month))
+        for image_info in infos:                                                #iterate over all photos in list
+            path_dest= os.path.join(image_info[1], str(year), folder_name)
+            path_origin = image_info[0]
             #if not os.path.exists(os.path.join(path_dest, file_name)):         
             shutil.copy2(path_origin, path_dest)
-            
+    '''        
+    for year, infos in count.search_dict_date_video.items():
+        for video_info in infos:
+            path_dest= os.path.join(video_info[1],"videos",str(year))
+            path_origin = video_info[0]
+            #if not os.path.exists(os.path.join(path_dest, file_name)):         
+            shutil.copy2(path_origin, path_dest)
+        
     
 def get_date(image,image_path,count):
+    ''' Change dates to datetime and edit modification time if no exif date exists'''
     if image.date:
         time_exif = datetime.strptime(image.date, "%Y:%m:%d %H:%M:%S")
         count.updatefoto_years(time_exif.year, time_exif.month)
@@ -304,35 +346,34 @@ def get_Data(image_path, path_dest, img_name, count):
         count.count_images += 1                                                     # count total number of images
         count.update_memory(os.path.getsize(image_path))                            # update size of all images that will get copied in MB
     except:
-        print("Image", img_name,"can't be opened.")
+        #print("Image", img_name,"can't be opened.")
         e = sys.exc_info()[1]
         print( "<p>Error: %s</p>" % e )
         return 
-    
     try:    
-        image = Fotoinfo(img, img_name, path_dest, image_path,count)                                                             #check if picture has exif data
+        image = Fotoinfo(img, img_name, path_dest, image_path, count)                                                             #check if picture has exif data
         #loc = image.location
         get_date(image,image_path,count)
-        
-           
         if image.geo_coords:    
-            print(image.geo_coords)
-        #count.update_search_dict(image)    
+            pass
         img.close()
-        #if copy:
-        #    copy_file(image_path, path_dest, img_name, image)
     except: 
         e = sys.exc_info()[1]
         print( "<p>Error: %s</p>" % e )
 
 def get_images(path, path_destination, count):
+    '''
+    decide whether file is image or video
+    pass images to get_data to extract exif data
+    extract video_date directly and store it in a dict to the count object     
+    '''
     extensions_images = "JPG","jpg","jpeg","PNG","png","tiff","tif","TIF","BMP","bmp"
     extensions_videos = "mov","MOV","mp4","MP4"
-    x = 0
+    #x = 0
     for image in os.listdir(path):
-        x += 1
-        if x == 20: 
-             return
+        #x += 1
+        #if x == 20: 
+        #     return
         if image.endswith(extensions_images):                                              #get Data from fotos
             get_Data(os.path.join(path, image), path_destination, image, count)                
             
@@ -340,8 +381,7 @@ def get_images(path, path_destination, count):
             timestamp = os.path.getmtime(os.path.join(path, image))
             time_mtime = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
             count.updatevideo_years(int(time_mtime[0:4]), int(time_mtime[5:7]))
-                
-            
+            count.update_search_dict_date_video(time_mtime[0:4], os.path.join(path, image) , path_destination, image)
             count.count_videos += 1                                                     # count total number of images
             count.update_memory(os.path.getsize(os.path.join(path, image))) 
 
@@ -362,15 +402,18 @@ def parse_fotos(path_origin, path_destination, count):
         for subDir in subDirectories:               # nach und nach die einzelnen SUb Directories absuchen            
             get_images(os.path.join(directory, subDir),path_destination, count)           # alle images einzeln auswerten
             break                       
-                    
+    
+
+
+                
 def main():
     count = Data_info()
-    path_origin, path_destination = set_filepaths()
+    path_origin, path_destination, search_path = set_filepaths()
     
     parse_fotos(path_origin, path_destination, count)
     build_folder_structure(path_destination, count.dict_years,count.list_years_videos)
-    
-    copy_File(count)
+    #copy_file(count)
+    search_date(count,"2015-6-8", search_path)    
     #sort_fotos_bylocation(path_origin, path_destination)    
     
     
