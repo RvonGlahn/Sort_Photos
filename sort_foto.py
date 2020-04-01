@@ -11,11 +11,15 @@ from geopy.geocoders import Nominatim
 
 '''
 Anpassungen:
-search_date erstellen
-geo to location implementieren
+update seach_dict_loc
+sort_location 
 GUI kivy
 pytoexe
 pytoapp
+Objekterkennung
+ - Freunde finden
+ - Selfies
+GAN - Freunde erstellen
 '''
 
 
@@ -34,12 +38,29 @@ class Data_info:
 
         self.dict_years = {}
         self.list_years_videos = []
-        self.list_locations = []   
+        self.dict_locations = {}   
         
         self.search_dict_date = {}
         self.search_dict_date_video = {}
         self.search_dict_loc = {}
-    
+        
+    def update_search_dict_loc(self, image_data):
+        '''
+        search_dict_location stores all locations for searching fotos
+        (location) :  [[path_orig,path_dest,image_name],[path_orig,path_dest,image_name], ...] 
+        '''
+        country = image_data.location[0]
+        city = image_data.location[1]
+        key = country+'-'+city
+        
+        info = []
+        info.append(image_data.path_origin)
+        info.append(image_data.path_dest)
+        info.append(image_data.name)
+        if key in self.search_dict_loc:
+            self.search_dict_loc[key].append(info)
+        else:
+            self.search_dict_loc.update({key:[info]})
     
     def update_search_dict_date(self, image_data):
         '''
@@ -77,20 +98,6 @@ class Data_info:
             self.search_dict_date_video.update({key:[info]})
            
             
-    def update_search_dict_loc(self, image_data):
-        '''
-        search_dict_location stores all locations for searching fotos
-        (location) :  [[path_orig,path_dest,image_name],[path_orig,path_dest,image_name], ...] 
-        '''
-        key = image_data.loc
-        info = []
-        info.append(image_data.path_origin)
-        info.append(image_data.path_dest)
-        info.append(image_data.name)
-        if key in self.search_dict_loc:
-            self.search_dict_loc[key].append(info)
-        else:
-            self.search_dict_loc.update({key:[info]})
 
     '''__________________________________________________________________________________________'''
         
@@ -114,7 +121,19 @@ class Data_info:
             return
         else:
             self.list_years_videos.append(year)
-                        
+            
+    def update_location(self, location):
+        '''update dict that has all dates (year,month) to build folder structure for video'''
+        country = location[0]
+        city = location[1]
+
+        if country in self.dict_locations:
+            if city in self.dict_locations[country]:
+                return
+            else:
+                self.dict_locations[country].append(city)  
+        else:    
+            self.dict_locations.update({country:[city]})
         
 '''
 _____________________________________________________________________________________________________
@@ -229,9 +248,15 @@ class Fotoinfo:
         if not self.geo_coords:
             return False
         lon,lat = self.geo_coords
-        geolocator = Nominatim(user_agent="GPS to Loc")
-        loc = geolocator.reverse(lat+","+ lon)
-        self.location = loc.address
+        geolocator = Nominatim(user_agent="sort")
+        loc = geolocator.reverse(lat+","+ lon, language='en')
+        dict_loc = loc.raw["address"]
+        country = dict_loc["country"]
+        try:
+            city = dict_loc["city"]
+        except:
+            city = dict_loc["town"]
+        self.location = (country, city)
         #print(loc.address)
 '''
 ___________________________________________________________________________________________________________
@@ -244,7 +269,7 @@ def set_filepaths():
     origin: folder from which you import the pictures
     destintion: folder where you will save the new folder structure
     '''
-    origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone"
+    origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Mi 9 SE"
     destination = r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
     search = r"C:\Users\Rasmus\Desktop\Rasmus\Photos\search"
     return origin, destination, search
@@ -384,7 +409,7 @@ def get_Data(image_path, path_dest, img_name, count):
         #loc = image.location
         get_date(image,image_path,count)
         if image.geo_coords:    
-            pass
+            count.update_search_dict_loc(image)
         img.close()
     except: 
         e = sys.exc_info()[1]
