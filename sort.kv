@@ -1,0 +1,21 @@
+<Start_Window>:
+
+    GridLayout:
+        rows: 4
+        size: root.width, root.height
+        
+        Label:
+            text: "Decide how you like to sort your fotos:"
+            color: [0,0,0,0,0.9]
+        
+        Button:
+            text:"sort photos by date"
+            on_press: root.btn()
+            
+        Button:
+            text:"sort photo by location"
+            on_press: root.btn()
+            
+        Button:
+            text:"search for specific date"
+            on_press: root.btn()

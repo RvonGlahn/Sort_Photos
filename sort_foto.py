@@ -12,6 +12,7 @@ from geopy.geocoders import Nominatim
 '''
 Anpassungen:
 GUI kivy
+exif Daten in Bildern ergänzen
 pytoexe
 pytoapp
 Objekterkennung
@@ -257,7 +258,10 @@ class Fotoinfo:
             return False
         lon,lat = self.geo_coords
         geolocator = Nominatim(user_agent="sort")
-        loc = geolocator.reverse(lat+","+ lon, language='en')
+        try:
+            loc = geolocator.reverse(lat+","+ lon, language='en',timeout=10000)
+        except:
+            return False
         dict_loc = loc.raw["address"]
         country = dict_loc["country"]
         try:
