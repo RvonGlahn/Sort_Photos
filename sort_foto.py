@@ -11,8 +11,6 @@ from geopy.geocoders import Nominatim
 
 '''
 Anpassungen:
-update seach_dict_loc
-sort_location 
 GUI kivy
 pytoexe
 pytoapp
@@ -44,23 +42,26 @@ class Data_info:
         self.search_dict_date_video = {}
         self.search_dict_loc = {}
         
+        
+    
+    
     def update_search_dict_loc(self, image_data):
         '''
         search_dict_location stores all locations for searching fotos
         (location) :  [[path_orig,path_dest,image_name],[path_orig,path_dest,image_name], ...] 
         '''
-        country = image_data.location[0]
-        city = image_data.location[1]
-        key = country+'-'+city
+        country, city =  image_data.location
+        key = str(image_data.year)+'-'+country+'-'+city
         
         info = []
         info.append(image_data.path_origin)
         info.append(image_data.path_dest)
-        info.append(image_data.name)
+        info.append(image_data.name) 
         if key in self.search_dict_loc:
             self.search_dict_loc[key].append(info)
         else:
             self.search_dict_loc.update({key:[info]})
+    
     
     def update_search_dict_date(self, image_data):
         '''
@@ -122,19 +123,26 @@ class Data_info:
         else:
             self.list_years_videos.append(year)
             
-    def update_location(self, location):
-        '''update dict that has all dates (year,month) to build folder structure for video'''
-        country = location[0]
-        city = location[1]
-
-        if country in self.dict_locations:
-            if city in self.dict_locations[country]:
-                return
-            else:
-                self.dict_locations[country].append(city)  
-        else:    
-            self.dict_locations.update({country:[city]})
+    def update_location(self, image_data):
+        '''
+        update dict that has all years and locations (year,country,city) 
+        to build folder structure for images
+        cities only for Germany
+        '''
+        country , city  = image_data.location
+        year = image_data.year
         
+        if year in self.dict_locations:
+            if country in self.dict_locations[year]:
+                if city in self.dict_locations[year][country]:
+                    return
+                else:
+                    self.dict_locations[year][country].append(city)  
+            else:    
+                self.dict_locations[year].update({country:[city]})
+        else:        
+            self.dict_locations.update({year: {}})
+            self.dict_locations[year].update({country:[city]})
 '''
 _____________________________________________________________________________________________________
 '''
@@ -256,7 +264,7 @@ class Fotoinfo:
             city = dict_loc["city"]
         except:
             city = dict_loc["town"]
-        self.location = (country, city)
+        return country, city
         #print(loc.address)
 '''
 ___________________________________________________________________________________________________________
@@ -308,6 +316,29 @@ def build_folder_structure(path_dest, dict_images, list_videos ):
         if not os.path.exists(os.path.join(path_video, str(year))):
             os.makedirs(os.path.join(path_video, str(year)))
 
+def build_folder_structure_loc(path_dest, dict_images, list_videos ):
+    '''
+    Anhand des globalen Objektes Count wird die Ordner Struktur gebildet    
+    Für jedes Jahr wird ein Ordner angelegt, der in 4 Unterordner strukturiert wird, sofern Fotos für die Monate vorhanden sind
+    Videos erhalten eigenen Ordner der in Jahre unterteilt ist.
+    '''
+    for year in dict_images:
+         #if not os.path.exists(os.path.join(path_dest, str(year))):
+         path = os.path.join(path_dest, str(year))
+         for country in dict_images[year]:
+             if country == "Germany":
+                 for city in dict_images[year][country]:
+                     if not os.path.exists(os.path.join(path, country, city)):    
+                         os.makedirs(os.path.join(path, country, city))
+             if not os.path.exists(os.path.join(path, country)):    
+                 os.makedirs(os.path.join(path, country))
+    #if not os.path.exists(os.path.join(path_dest, "videos")):
+        #os.mkdir(os.path.join(path_dest, "videos"))
+    path_video = os.path.join(path_dest, "videos")
+    for year in list_videos:
+        if not os.path.exists(os.path.join(path_video, str(year))):
+            os.makedirs(os.path.join(path_video, str(year)))
+
         
 def search_date(count,path_dest_date,start_date,end_date = False):
     '''
@@ -343,13 +374,31 @@ def search_date(count,path_dest_date,start_date,end_date = False):
         else:
             return False
 
+def copy_file_loc(count):
+    for keys, infos in count.search_dict_loc.items():
+        year,country,city = keys.split("-")
+        for image_info in infos:
+            if country == "Germany":
+                path_dest= os.path.join(image_info[1], str(year), country, city)
+            else:
+                path_dest= os.path.join(image_info[1], str(year),country)
+            path_origin = image_info[0]
+            #if not os.path.exists(os.path.join(path_dest, file_name)):         
+            shutil.copy2(path_origin, path_dest)
+    
+    for year, infos in count.search_dict_date_video.items():
+        for video_info in infos:
+            path_dest= os.path.join(video_info[1],"videos",str(year))
+            path_origin = video_info[0]
+            #if not os.path.exists(os.path.join(path_dest, file_name)):         
+            shutil.copy2(path_origin, path_dest)
         
-def copy_file(count):
+        
+def copy_file_date(count):
     '''
     copy file from origin to destination
     first images second vidoes
     '''
-    
     for date, infos in count.search_dict_date.items():      # iterate over all days
         year,month,day = date.split("-")    
         folder_name = month_to_foldername(int(month))
@@ -383,7 +432,8 @@ def get_date(image,image_path,count):
         image.set_month(int(time_mtime[5:7]))
         image.set_day(int(time_mtime[8:10]))
     count.update_search_dict_date(image)
-    
+    if image.location:
+        count.update_location(image)
 
 
 def get_Data(image_path, path_dest, img_name, count):
@@ -404,16 +454,17 @@ def get_Data(image_path, path_dest, img_name, count):
         e = sys.exc_info()[1]
         print( "<p>Error: %s</p>" % e )
         return 
-    try:    
+    if True:
+    #try:    
         image = Fotoinfo(img, img_name, path_dest, image_path, count)                                                             #check if picture has exif data
         #loc = image.location
         get_date(image,image_path,count)
         if image.geo_coords:    
             count.update_search_dict_loc(image)
         img.close()
-    except: 
-        e = sys.exc_info()[1]
-        print( "<p>Error: %s</p>" % e )
+    #except: 
+    #    e = sys.exc_info()[1]
+    #    print( "<p>Error: %s</p>" % e )
 
 def get_images(path, path_destination, count):
     '''
@@ -467,10 +518,13 @@ def main():
     path_origin, path_destination, search_path = set_filepaths()
     
     parse_fotos(path_origin, path_destination, count)
-    build_folder_structure(path_destination, count.dict_years,count.list_years_videos)
-    #copy_file(count)
-    search_date(count, search_path,"2017-10-17")    
-    #sort_fotos_bylocation(path_origin, path_destination)    
+    
+    #build_folder_structure(path_destination, count.dict_years,count.list_years_videos)
+    #copy_file_date(count)
+    #search_date(count, search_path,"2017-10-17")
+    
+    build_folder_structure_loc(path_destination, count.dict_locations,count.list_years_videos)
+    copy_file_loc(count)
     
     
     ''' Info Section '''
