@@ -1,6 +1,7 @@
 WindowManager:
     Start_Window:
     Window_DateInfo:
+    Window_SortDate:
     Window_LocationInfo:
     Window_SearchInfo:
 
@@ -12,8 +13,9 @@ WindowManager:
     GridLayout:
         rows: 4
         size: root.width, root.height
-        padding: [150, 20]
-        spacing: [20,20]
+        padding: [150, 40]
+        spacing: [25,25]
+        
         Label:
             text: "Decide how you like to sort your fotos:"
             color: [0,0,0,0.9]
@@ -43,46 +45,157 @@ WindowManager:
             
 <Window_DateInfo>:
     name: "dateinfo"
-
+   
     GridLayout:
-        cols: 3
+        rows: 2 
         size: root.width, root.height
+        padding: [50, 50]
+        spacing: [20,20]
         
-        Label:
-            text: "Which photos do you like to sort?"
-            color: [0,0,0,1]
-        Button:
-            text: "Choose Folder"
-        Label: 
-            id: l_date_origin_filepath
-            text: " "
+        GridLayout:
+            cols: 3
+            size: root.width, root.height
+            padding: [30, 30]
+            spacing: [20,20]
             
-        Label:
-            text: "Where do you want to store the photos?"
-            color: [0,0,0,1]
-        Button:
-            text: "Choose Folder"
-            on_release:
-                root.origin: "C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Mi 9 SE"
-                root.destination: r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
-        Label: 
-            id: l_date_dest_filepath
-            text: " "
-            
-        RoundedButton:
-            text: "start"
-            back_color: (0.157, 0.455, 0.753, 1.0)
-            on_release:
-                root.date_startparse()
-                app.root.current = "start"
-                root.manager.transition.direction = "left"    
+            Label:
+                text: "Which photos do \n you like to sort?"
+                color: [0,0,0,1]
+              
+            Button:
+                text: "Choose Folder"
+                back_color: (108/255, 122/255, 137/255, 1)
+                on_release:
+                    root.set_origin()
+                    
+            Label: 
+                id: l_date_origin_filepath
+                color: [0,0,0,1]
+                text: "(path to folder)"
+                text_size: self.size
+                halign: 'right'
+                valign: 'middle'
+                shorten: True
+                
+            Label:
+                text: "Where do you want \n to store the photos?"
+                color: [0,0,0,1]
+            Button:
+                text: "Choose Folder"
+                on_release:
+                    root.set_destination()
+            Label: 
+                id: l_date_dest_filepath
+                color: [0,0,0,1]
+                text: "(path to folder)"
+                text_size: self.size
+                halign: 'right'
+                valign: 'middle'
+                shorten: True
+     
 
-        Button:
-            text: "Go Back"
-            on_release:
-                app.root.current = "start"
-                root.manager.transition.direction = "right"
+        GridLayout:
         
+            cols: 2
+            padding: [40, 40]
+            spacing: [20,20]
+            row_default_height: "50dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            RoundedButton:
+                text: "sort photos"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    root.date_startparse()
+                    app.root.current = "sortdate"
+                    root.manager.transition.direction = "left"    
+            RoundedButton:
+                text: "Go Back"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "start"
+                    root.manager.transition.direction = "right"
+        
+        
+        
+        
+        
+        
+<Window_SortDate>:
+    name: "sortdate"
+    GridLayout:
+        rows: 2
+        size: root.width, root.height
+        padding: [20, 20]
+        spacing: [20,20]
+
+        GridLayout:
+            cols: 2
+            size: root.width, root.height
+            padding: [30, 30]
+            spacing: [20,20]
+                
+            Label:
+                text: "Images found:"
+                color: [0,0,0,1]                    
+            Label: 
+                id: l_date_num_images
+                color: [0,0,0,1]
+                text: ""   
+                
+            Label:
+                text: "Images without exact date:"
+                color: [0,0,0,1]
+            Label: 
+                id: l_date_num_noexif
+                color: [0,0,0,1]
+                text: ""
+    
+            Label:
+                text: "Videos found:"
+                color: [0,0,0,1]
+            Label: 
+                id: l_date_num_videos
+                color: [0,0,0,1]
+                text: ""
+    
+            Label:
+                text: "memory in MB:"
+                color: [0,0,0,1]
+            Label: 
+                id: l_date_num_memory
+                color: [0,0,0,1]
+                text: ""              
+    
+        GridLayout:
+            cols: 2
+            padding: [40, 40]
+            spacing: [20,20]
+            row_default_height: "50dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            RoundedButton:
+                text: "sort photos"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "start"
+                    root.manager.transition.direction = "left"    
+
+            RoundedButton:
+                text: "Go Back"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "start"
+                    root.manager.transition.direction = "right"
+                
+                
+                
+                
+
         
 <Window_LocationInfo>:
     name: "locationinfo"
@@ -108,7 +221,7 @@ WindowManager:
     background_color: (0,0,0,0)
     background_normal: ''
     back_color: (1,0,1,1)
-    border_radius: [35]
+    border_radius: [23]
     canvas.before:
         Color:
             rgba: self.back_color

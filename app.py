@@ -20,23 +20,40 @@ from kivy.properties import ObjectProperty
 from kivy.core.window import Window
 from kivy.uix.filechooser import FileChooser
 
-Window.size = (500, 300)
+Window.size = (600, 400)
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
 
 class Start_Window(Screen):
-    origin = ObjectProperty(None)
-    destination = ObjectProperty(None)
-    search = ObjectProperty(None)
-
+    pass
 
 class Window_DateInfo(Screen):
     origin = ObjectProperty(None)
     destination = ObjectProperty(None)
+    count = sort_foto.Data_info()
     
+    def set_destination(self):
+        self.destination = r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
+        self.ids.l_date_dest_filepath.text = self.destination
+        
+    def set_origin(self):
+        self.origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Mi 9 SE"
+        self.ids.l_date_origin_filepath.text = self.origin
+        
     def date_startparse(self):
-        count = sort_foto.Data_info()
-        sort_foto.parse_fotos(self.origin, self.destination, count)
+        sort_foto.parse_fotos(self.origin, self.destination, self.count)
+        print("Images", self.count.count_images)
+        print("GPS", self.count.count_gps)
+        print(int(self.count.memory_size_MB),"MB Memory copied")
+        print("Videos:",self.count.count_videos)
+        print("Exif_date exists",self.count.count_date)
+        print("No Exif Date",self.count.count_noexif_date)
+        print("No Exif",self.count.count_noexif)
 
+class Window_SortDate(Screen):
+    pass
+#    def date_startsort(self):
+#        sort_foto.build_folder_structure(self.destination, self.count.dict_years,self.count.list_years_videos)
+#        sort_foto.copy_file_date(self.count)
 
 class Window_LocationInfo(Screen):
     pass
@@ -53,8 +70,8 @@ class WindowManager(ScreenManager):
 kv = Builder.load_file("sort.kv")
 sm = WindowManager()
 
-screens = [Start_Window(name="start"), Window_DateInfo(name="dateinfo"),Window_LocationInfo(name="locationinfo"),
-           Window_SearchInfo(name="searchinfo")]
+screens = [Start_Window(name="start"), Window_DateInfo(name="dateinfo"), Window_SortDate(name="sortdate"),
+           Window_LocationInfo(name="locationinfo"), Window_SearchInfo(name="searchinfo")]
 for screen in screens:
     sm.add_widget(screen)
 
