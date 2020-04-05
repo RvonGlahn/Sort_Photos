@@ -1,21 +1,118 @@
-<Start_Window>:
+WindowManager:
+    Start_Window:
+    Window_DateInfo:
+    Window_LocationInfo:
+    Window_SearchInfo:
 
+
+
+<Start_Window>:
+    name: "start"
+    
     GridLayout:
         rows: 4
         size: root.width, root.height
-        
+        padding: [150, 20]
+        spacing: [20,20]
         Label:
             text: "Decide how you like to sort your fotos:"
-            color: [0,0,0,0,0.9]
+            color: [0,0,0,0.9]
         
-        Button:
+        RoundedButton:
             text:"sort photos by date"
-            on_press: root.btn()
-            
-        Button:
+            back_color: (0.157, 0.455, 0.753, 1.0)
+            on_release:
+                app.root.current = "dateinfo"
+                root.manager.transition.direction = "left"
+        RoundedButton:
             text:"sort photo by location"
-            on_press: root.btn()
-            
-        Button:
+            back_color: (0.157, 0.455, 0.753, 1.0)
+            on_release:
+                app.root.current = "locationinfo"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
             text:"search for specific date"
-            on_press: root.btn()
+            back_color: (0.157, 0.455, 0.753, 1.0)
+            on_release:
+                app.root.current = "searchinfo"
+                root.manager.transition.direction = "left"
+            
+
+            
+            
+<Window_DateInfo>:
+    name: "dateinfo"
+
+    GridLayout:
+        cols: 3
+        size: root.width, root.height
+        
+        Label:
+            text: "Which photos do you like to sort?"
+            color: [0,0,0,1]
+        Button:
+            text: "Choose Folder"
+        Label: 
+            id: l_date_origin_filepath
+            text: " "
+            
+        Label:
+            text: "Where do you want to store the photos?"
+            color: [0,0,0,1]
+        Button:
+            text: "Choose Folder"
+            on_release:
+                root.origin: "C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Mi 9 SE"
+                root.destination: r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
+        Label: 
+            id: l_date_dest_filepath
+            text: " "
+            
+        RoundedButton:
+            text: "start"
+            back_color: (0.157, 0.455, 0.753, 1.0)
+            on_release:
+                root.date_startparse()
+                app.root.current = "start"
+                root.manager.transition.direction = "left"    
+
+        Button:
+            text: "Go Back"
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+        
+        
+<Window_LocationInfo>:
+    name: "locationinfo"
+
+    Button:
+        text: "Go Back"
+        on_release:
+            app.root.current = "start"
+            root.manager.transition.direction = "right"
+        
+        
+<Window_SearchInfo>:
+    name: "searchinfo"
+
+    Button:
+        text: "Go Back"
+        on_release:
+            app.root.current = "start"
+            root.manager.transition.direction = "right"        
+         
+         
+<RoundedButton@Button>:
+    background_color: (0,0,0,0)
+    background_normal: ''
+    back_color: (1,0,1,1)
+    border_radius: [35]
+    canvas.before:
+        Color:
+            rgba: self.back_color
+        RoundedRectangle:
+            size:self.size
+            pos: self.pos
+            radius: self.border_radius

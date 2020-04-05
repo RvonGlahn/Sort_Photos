@@ -525,6 +525,7 @@ def main():
     
     #build_folder_structure(path_destination, count.dict_years,count.list_years_videos)
     #copy_file_date(count)
+    
     #search_date(count, search_path,"2017-10-17")
     
     build_folder_structure_loc(path_destination, count.dict_locations,count.list_years_videos)
