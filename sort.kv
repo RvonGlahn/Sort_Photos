@@ -115,6 +115,7 @@ WindowManager:
                 text: "Go Back"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
+                    root.reset_count()
                     app.root.current = "start"
                     root.manager.transition.direction = "right"
         
@@ -136,14 +137,13 @@ WindowManager:
             size: root.width, root.height
             padding: [30, 30]
             spacing: [20,20]
-                
             Label:
                 text: "Images found:"
                 color: [0,0,0,1]                    
             Label: 
                 id: l_date_num_images
                 color: [0,0,0,1]
-                text: ""   
+                text : ""
                 
             Label:
                 text: "Images without exact date:"
@@ -182,6 +182,7 @@ WindowManager:
                 text: "sort photos"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
+                    root.date_startsort()
                     app.root.current = "start"
                     root.manager.transition.direction = "left"    
 
@@ -215,7 +216,7 @@ WindowManager:
         on_release:
             app.root.current = "start"
             root.manager.transition.direction = "right"        
-         
+
          
 <RoundedButton@Button>:
     background_color: (0,0,0,0)
