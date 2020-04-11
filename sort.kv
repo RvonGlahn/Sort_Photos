@@ -4,7 +4,7 @@ WindowManager:
     Window_SortDate:
     Window_LocationInfo:
     Window_SearchInfo:
-
+    My_Filechooser:
 
 
 <Start_Window>:
@@ -66,7 +66,9 @@ WindowManager:
                 text: "Choose Folder"
                 back_color: (108/255, 122/255, 137/255, 1)
                 on_release:
-                    root.set_origin()
+                    root.set_pathtype("origin")
+                    app.root.current = "my_filechooser"
+                    root.manager.transition.direction = "left"
                     
             Label: 
                 id: l_date_origin_filepath
@@ -82,8 +84,12 @@ WindowManager:
                 color: [0,0,0,1]
             Button:
                 text: "Choose Folder"
+                back_color: (108/255, 122/255, 137/255, 1)
                 on_release:
-                    root.set_destination()
+                    root.set_pathtype("destination")
+                    app.root.current = "my_filechooser"
+                    root.manager.transition.direction = "left"
+                
             Label: 
                 id: l_date_dest_filepath
                 color: [0,0,0,1]
@@ -230,3 +236,55 @@ WindowManager:
             size:self.size
             pos: self.pos
             radius: self.border_radius
+            
+            
+            
+            
+<My_Filechooser>:
+    id: my_filechooser
+    canvas.before:
+        Color:
+            rgb: 112/255, 128/255, 144/255
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    GridLayout:
+        rows: 2
+        size: root.width, root.height
+        padding: [20, 20]
+        spacing: [20,20]
+        color: (.5, .4, .5, 1)
+        
+        
+        FileChooserIconView:
+            id: filechooser
+            dirselect: True
+            on_selection: my_filechooser.selected(filechooser.path)
+        
+        GridLayout:
+            cols: 2
+            padding: [40, 40]
+            spacing: [20,20]
+            row_default_height: "50dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            RoundedButton:
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                text: "open"
+                on_release: 
+                    my_filechooser.open(filechooser.path)
+                    app.root.current = "dateinfo"
+                    root.manager.transition.direction = "right"
+
+            RoundedButton:
+                text: "Go Back"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "dateinfo"
+                    root.manager.transition.direction = "right"
+
+
+
+            

@@ -20,9 +20,11 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
+from kivy.uix.popup import Popup
 from kivy.properties import ObjectProperty
 from kivy.core.window import Window
 from kivy.uix.filechooser import FileChooser
+
 
 Window.size = (600, 400)
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
@@ -38,19 +40,12 @@ class Start_Window(Screen):
 
 class Window_DateInfo(Screen):
     
-    def set_destination(self):
-        global destination
-        destination = r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
-        self.ids.l_date_dest_filepath.text = destination
-        
-    def set_origin(self):
-        global origin
-        origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Mi 9 SE"
-        self.ids.l_date_origin_filepath.text = origin
+    def set_pathtype(self, path_type):
+        GlobalVar.path_type = path_type
         
     def date_startparse(self):
         global count
-        sort_foto.parse_fotos(origin, destination,count)
+        sort_foto.parse_fotos(GlobalVar.path_origin, GlobalVar.path_destination, count)
         GlobalVar.count = count
         
         sortdate = self.manager.get_screen('sortdate')
@@ -66,8 +61,28 @@ class Window_DateInfo(Screen):
 
 class Window_SortDate(Screen):
     def date_startsort(self):
-        sort_foto.build_folder_structure(destination, count.dict_years,count.list_years_videos)
+        sort_foto.build_folder_structure(GlobalVar.path_destination, count.dict_years,count.list_years_videos)
         sort_foto.copy_file_date(count)
+
+
+'''_____________________________________________________________________'''
+class My_Filechooser(Screen):
+    def open(self, path):
+        print(path)
+        if GlobalVar.path_type == "origin":
+            GlobalVar.path_origin = path
+            infodate = self.manager.get_screen('dateinfo')
+            infodate.ids.l_date_origin_filepath.text = path
+        if GlobalVar.path_type == "destination":
+            GlobalVar.path_destination = path
+            infodate = self.manager.get_screen('dateinfo')
+            infodate.ids.l_date_dest_filepath.text = path
+        
+    def selected(self,path):
+        print ("selected:", path)
+'''_____________________________________________________________________'''
+
+
 
 
 class Window_LocationInfo(Screen):
@@ -82,6 +97,12 @@ class WindowManager(ScreenManager):
     pass
 
 
+
+
+
+
+
+
 class SortApp(App):
     def build(self):
         return sm
@@ -91,7 +112,7 @@ if __name__ == '__main__':
     sm = WindowManager()
 
     screens = [Start_Window(name="start"), Window_DateInfo(name="dateinfo"), Window_SortDate(name="sortdate"),
-           Window_LocationInfo(name="locationinfo"), Window_SearchInfo(name="searchinfo")]
+           Window_LocationInfo(name="locationinfo"), Window_SearchInfo(name="searchinfo"),My_Filechooser(name ="my_filechooser")]
     for screen in screens:
         sm.add_widget(screen)
 
