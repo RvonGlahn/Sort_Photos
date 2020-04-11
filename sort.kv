@@ -1,44 +1,44 @@
 WindowManager:
     Start_Window:
     Window_DateInfo:
-    Window_SortDate:
-    Window_LocationInfo:
-    Window_SearchInfo:
     My_Filechooser:
+    Window_SortDate:
+    Search_Date:
+    Last_Screen:
+    
 
 
 <Start_Window>:
     name: "start"
     
     GridLayout:
-        rows: 4
+        rows: 2
         size: root.width, root.height
-        padding: [150, 40]
-        spacing: [25,25]
+        padding: [150, 75, 150, 50]
+        spacing: [50,50]
         
         Label:
-            text: "Decide how you like to sort your fotos:"
+            text: "Wanna tidy up your photos? "
             color: [0,0,0,0.9]
+            font_size: "24sp"
         
-        RoundedButton:
-            text:"sort photos by date"
-            back_color: (0.157, 0.455, 0.753, 1.0)
-            on_release:
-                app.root.current = "dateinfo"
-                root.manager.transition.direction = "left"
-        RoundedButton:
-            text:"sort photo by location"
-            back_color: (0.157, 0.455, 0.753, 1.0)
-            on_release:
-                app.root.current = "locationinfo"
-                root.manager.transition.direction = "left"
-
-        RoundedButton:
-            text:"search for specific date"
-            back_color: (0.157, 0.455, 0.753, 1.0)
-            on_release:
-                app.root.current = "searchinfo"
-                root.manager.transition.direction = "left"
+        GridLayout:
+            cols: 1
+            padding: [50, 20]
+            spacing: [20,20]
+            row_default_height: "50dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height   
+            
+            RoundedButton:
+                text:"Select Photos"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    root.set_desktop()
+                    app.root.current = "dateinfo"
+                    root.manager.transition.direction = "left"
+        
             
 
             
@@ -59,12 +59,13 @@ WindowManager:
             spacing: [20,20]
             
             Label:
-                text: "Which photos do \n you like to sort?"
+                text: "Which photos do \nyou like to sort?"
                 color: [0,0,0,1]
               
-            Button:
+            RoundedButton:
                 text: "Choose Folder"
-                back_color: (108/255, 122/255, 137/255, 1)
+                back_color: (0.424, 0.478, 0.537, 1)
+                border_radius: [10]
                 on_release:
                     root.set_pathtype("origin")
                     app.root.current = "my_filechooser"
@@ -73,18 +74,19 @@ WindowManager:
             Label: 
                 id: l_date_origin_filepath
                 color: [0,0,0,1]
-                text: "(path to folder)"
+                text: ""
                 text_size: self.size
                 halign: 'right'
                 valign: 'middle'
                 shorten: True
                 
             Label:
-                text: "Where do you want \n to store the photos?"
+                text: "Where do you want to \nstore your photos?"
                 color: [0,0,0,1]
-            Button:
+            RoundedButton:
                 text: "Choose Folder"
-                back_color: (108/255, 122/255, 137/255, 1)
+                back_color: (0.424, 0.478, 0.537, 1)
+                border_radius: [10]
                 on_release:
                     root.set_pathtype("destination")
                     app.root.current = "my_filechooser"
@@ -93,7 +95,7 @@ WindowManager:
             Label: 
                 id: l_date_dest_filepath
                 color: [0,0,0,1]
-                text: "(path to folder)"
+                text: ""
                 text_size: self.size
                 halign: 'right'
                 valign: 'middle'
@@ -111,7 +113,7 @@ WindowManager:
             height: self.minimum_height
             
             RoundedButton:
-                text: "sort photos"
+                text: "Analyze Photos"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
                     root.date_startparse()
@@ -128,6 +130,50 @@ WindowManager:
         
         
         
+<My_Filechooser>:
+    id: my_filechooser
+    name:  "my_filechooser"
+    canvas.before:
+        Color:
+            rgb: 112/255, 128/255, 144/255
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    GridLayout:
+        rows: 2
+        size: root.width, root.height
+        padding: [20, 20]
+        spacing: [20,20]
+        color: (.5, .4, .5, 1)
+        
+        
+        FileChooserIconView:
+            id: filechooser
+            dirselect: True
+        
+        GridLayout:
+            cols: 2
+            padding: [40, 40]
+            spacing: [20,20]
+            row_default_height: "40dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            RoundedButton:
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                text: "open"
+                on_release: 
+                    my_filechooser.open(filechooser.path)
+                    app.root.current = "dateinfo"
+                    root.manager.transition.direction = "right"
+
+            RoundedButton:
+                text: "Go Back"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "dateinfo"
+                    root.manager.transition.direction = "right"
         
         
 <Window_SortDate>:
@@ -135,13 +181,13 @@ WindowManager:
     GridLayout:
         rows: 2
         size: root.width, root.height
-        padding: [20, 20]
+        padding: [20, 20, 20, 0]
         spacing: [20,20]
 
         GridLayout:
             cols: 2
             size: root.width, root.height
-            padding: [30, 30]
+            padding: [30, 10]
             spacing: [20,20]
             Label:
                 text: "Images found:"
@@ -158,7 +204,15 @@ WindowManager:
                 id: l_date_num_noexif
                 color: [0,0,0,1]
                 text: ""
-    
+                
+            Label:
+                text: "Images without location"
+                color: [0,0,0,1]
+            Label: 
+                id: l_date_num_noloc
+                color: [0,0,0,1]
+                text: ""    
+                
             Label:
                 text: "Videos found:"
                 color: [0,0,0,1]
@@ -185,11 +239,26 @@ WindowManager:
             height: self.minimum_height
             
             RoundedButton:
-                text: "sort photos"
+                text: "Sort by Date"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
                     root.date_startsort()
-                    app.root.current = "start"
+                    app.root.current = "last_screen"
+                    root.manager.transition.direction = "left"    
+
+            RoundedButton:
+                text: "Search by Date"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "searchdate"
+                    root.manager.transition.direction = "left"
+                    
+            RoundedButton:
+                text: "Sort by Location"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    root.location_startsort()
+                    app.root.current = "last_screen"
                     root.manager.transition.direction = "left"    
 
             RoundedButton:
@@ -198,68 +267,39 @@ WindowManager:
                 on_release:
                     app.root.current = "start"
                     root.manager.transition.direction = "right"
-                
-                
-                
-                
 
-        
-<Window_LocationInfo>:
-    name: "locationinfo"
-
-    Button:
-        text: "Go Back"
-        on_release:
-            app.root.current = "start"
-            root.manager.transition.direction = "right"
-        
-        
-<Window_SearchInfo>:
-    name: "searchinfo"
-
-    Button:
-        text: "Go Back"
-        on_release:
-            app.root.current = "start"
-            root.manager.transition.direction = "right"        
-
-         
-<RoundedButton@Button>:
-    background_color: (0,0,0,0)
-    background_normal: ''
-    back_color: (1,0,1,1)
-    border_radius: [23]
-    canvas.before:
-        Color:
-            rgba: self.back_color
-        RoundedRectangle:
-            size:self.size
-            pos: self.pos
-            radius: self.border_radius
-            
-            
-            
-            
-<My_Filechooser>:
-    id: my_filechooser
-    canvas.before:
-        Color:
-            rgb: 112/255, 128/255, 144/255
-        Rectangle:
-            pos: self.pos
-            size: self.size
+<Search_Date>:
+    name: "searchdate"
     GridLayout:
         rows: 2
         size: root.width, root.height
-        padding: [20, 20]
+        padding: [30, 30]
         spacing: [20,20]
-        color: (.5, .4, .5, 1)
         
-        
-        FileChooserIconView:
-            id: filechooser
-            dirselect: True
-            on_selection: my_filechooser.selected(filechooser.path)
+        GridLayout:
+            cols: 2
+            size: root.width, root.height
+            padding: [30, 30]
+            spacing: [20,20]
+            
+            Label:
+                text: "Start-Date"
+                color: [0,0,0,1] 
+            TextInput:
+                id: startdate
+                multiline: False
+                text: "YYYY-MM-DD"
+                height: self.minimum_height
+                focus: True
+           
+            Label:
+                text: "End-Date"
+                color: [0,0,0,1]
+            TextInput:
+                id: enddate
+                multiline: False
+                text: "YYYY-MM-DD"
+                height: 20
         
         GridLayout:
             cols: 2
@@ -271,20 +311,65 @@ WindowManager:
             height: self.minimum_height
             
             RoundedButton:
+                text: "Search and Copy"
                 back_color: (0.157, 0.455, 0.753, 1.0)
-                text: "open"
-                on_release: 
-                    my_filechooser.open(filechooser.path)
-                    app.root.current = "dateinfo"
-                    root.manager.transition.direction = "right"
+                on_release:
+                    app.root.current = "last_screen"
+                    root.manager.transition.direction = "left"    
 
             RoundedButton:
                 text: "Go Back"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
-                    app.root.current = "dateinfo"
+                    app.root.current = "sortdate"
                     root.manager.transition.direction = "right"
 
 
+                    
 
+<Last_Screen>:
+    name: "last_screen"
+    GridLayout:
+        rows: 3
+        size: root.width, root.height
+        padding: [150, 20]
+        spacing: [20,30]
+        
+        Label:
+            text: "Copying your photos was succesful!"
+            color: [0,0,0,1]
+            font_size: "16sp"
+        
+        Image:
+            source: 'copy_icon.png'
+            size: self.texture_size
             
+        GridLayout:
+            cols: 1
+            padding: [50, 30]
+            spacing: [20,20]
+            row_default_height: "50dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height   
+            
+            RoundedButton:
+                text: "Go Back to Start"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    app.root.current = "start"
+                    root.manager.transition.direction = "right"
+
+
+<RoundedButton@Button>:
+    background_color: (0,0,0,0)
+    background_normal: ''
+    back_color: (1,0,1,1)
+    border_radius: [23]
+    canvas.before:
+        Color:
+            rgba: self.back_color
+        RoundedRectangle:
+            size:self.size
+            pos: self.pos
+            radius: self.border_radius                    
