@@ -1,11 +1,8 @@
 '''
+on-Release Button blinken und text = "copying"
 Windows für alle Funktionen
-try except mit Pop.up für leere pfade
-datepicker
-count reset für go back 
-progress bar für copy
-images folder erstellen
-Fehler beheben
+datepicker Kontrolle einfügen
+images folder erstellen getcwd + add to path
 '''
 import os
 import kivy
@@ -30,8 +27,6 @@ from kivy.uix.filechooser import FileChooser
 Window.size = (600, 400)
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
 
-count = sort_foto.Data_info()
-
 
 class Start_Window(Screen):
     def set_desktop(self):
@@ -45,33 +40,38 @@ class Window_DateInfo(Screen):
     def set_pathtype(self, path_type):
         GlobalVar.path_type = path_type
         
+    def check_path(self):
+        if GlobalVar.path_origin == "" or GlobalVar.path_destination == "" :
+            popup = Popup(title='Reminder', content=Label(text='Please select a folder \nfor origin and destination',font_size = "16sp"),size_hint=(None, None), size=(300, 300))
+            popup.open()
+        else:
+            self.date_startparse()
+            sm.current = "sortdate"
+        
     def date_startparse(self):
-        global count
-        sort_foto.parse_fotos(GlobalVar.path_origin, GlobalVar.path_destination, count)
-        GlobalVar.count = count
+        sort_foto.parse_fotos(GlobalVar.path_origin, GlobalVar.path_destination, GlobalVar.count)
         
         
         sortdate = self.manager.get_screen('sortdate')
-        sortdate.ids.l_date_num_images.text = str(count.count_images)
-        sortdate.ids.l_date_num_noexif.text = str(count.count_noexif_date)
-        sortdate.ids.l_date_num_noloc.text = str(count.count_images-count.count_gps)
-        sortdate.ids.l_date_num_videos.text = str(count.count_videos)
-        sortdate.ids.l_date_num_memory.text = str(int(count.memory_size_MB))
+        sortdate.ids.l_date_num_images.text = str(GlobalVar.count.count_images)
+        sortdate.ids.l_date_num_noexif.text = str(GlobalVar.count.count_noexif_date)
+        sortdate.ids.l_date_num_noloc.text = str(GlobalVar.count.count_images-GlobalVar.count.count_gps)
+        sortdate.ids.l_date_num_videos.text = str(GlobalVar.count.count_videos)
+        sortdate.ids.l_date_num_memory.text = str(int(GlobalVar.count.memory_size_MB))
         
-    def reset_count(self):
-        global count 
-        count = sort_foto.Data_info()
-
 
 class Window_SortDate(Screen):
     def date_startsort(self):
-        sort_foto.build_folder_structure(GlobalVar.path_destination, count.dict_years,count.list_years_videos)
-        sort_foto.copy_file_date(count)
+        sort_foto.build_folder_structure(GlobalVar.path_destination, GlobalVar.count.dict_years,GlobalVar.count.list_years_videos)
+        sort_foto.copy_file_date(GlobalVar.count)
 
     def location_startsort(self):
-        sort_foto.build_folder_structure_loc(GlobalVar.path_destination, count.dict_locations,count.list_years_videos)
-        sort_foto.copy_file_loc(count)
-
+        sort_foto.build_folder_structure_loc(GlobalVar.path_destination, GlobalVar.count.dict_locations,GlobalVar.count.list_years_videos)
+        sort_foto.copy_file_loc(GlobalVar.count)
+        
+    def reset_count(self):
+        del (GlobalVar.count)
+        GlobalVar.count = sort_foto.Data_info()
 
 class My_Filechooser(Screen):
     def open(self, path):
@@ -90,22 +90,20 @@ class Search_Date(Screen):
 
 
 class Last_Screen(Screen):
-    pass
+    def reset_count(self):
+        del (GlobalVar.count)
+        GlobalVar.count = sort_foto.Data_info()
 
 
 class WindowManager(ScreenManager):
     pass
 
 
-
-
-
-
-
-
 class SortApp(App):
     def build(self):
         return sm
+    
+    
     
 if __name__ == '__main__':
     kv = Builder.load_file("sort.kv")

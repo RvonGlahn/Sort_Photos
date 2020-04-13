@@ -20,7 +20,7 @@ WindowManager:
         Label:
             text: "Wanna tidy up your photos? "
             color: [0,0,0,0.9]
-            font_size: "24sp"
+            font_size: "20sp"
         
         GridLayout:
             cols: 1
@@ -116,14 +116,13 @@ WindowManager:
                 text: "Analyze Photos"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
-                    root.date_startparse()
-                    app.root.current = "sortdate"
                     root.manager.transition.direction = "left"    
+                    root.check_path()
+                    
             RoundedButton:
                 text: "Go Back"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
-                    root.reset_count()
                     app.root.current = "start"
                     root.manager.transition.direction = "right"
         
@@ -265,7 +264,8 @@ WindowManager:
                 text: "Go Back"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
-                    app.root.current = "start"
+                    root.reset_count()
+                    app.root.current = "dateinfo"
                     root.manager.transition.direction = "right"
 
 <Search_Date>:
@@ -276,30 +276,39 @@ WindowManager:
         padding: [30, 30]
         spacing: [20,20]
         
-        GridLayout:
-            cols: 2
-            size: root.width, root.height
-            padding: [30, 30]
-            spacing: [20,20]
-            
+        FloatLayout:       
+            size: root.width, root.height/2
             Label:
-                text: "Start-Date"
-                color: [0,0,0,1] 
+                text: "Start-Date:"
+                color: [0,0,0,1]
+                size_hint: 0.3, 0.15
+                pos_hint: {'x': 0.2, 'top':.7}
+                padding_y: 8
             TextInput:
                 id: startdate
                 multiline: False
-                text: "YYYY-MM-DD"
+                text: "  YYYY-MM-DD"
+                size_hint: [None,None]
                 height: self.minimum_height
+                width: 120
                 focus: True
-           
+                padding: 8
+                pos_hint: {'x': .6, 'top':.7}
             Label:
-                text: "End-Date"
+                text: "End-Date:"
                 color: [0,0,0,1]
+                size_hint: 0.3, 0.15
+                pos_hint: {'x': 0.2 , 'top':.45}
+                padding_y: 8
             TextInput:
                 id: enddate
                 multiline: False
-                text: "YYYY-MM-DD"
-                height: 20
+                text: "  YYYY-MM-DD"
+                size_hint: [None,None]
+                height: self.minimum_height
+                width: 120
+                padding: 8
+                pos_hint: {'x': .6, 'top':.45}
         
         GridLayout:
             cols: 2
@@ -322,9 +331,8 @@ WindowManager:
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
                     app.root.current = "sortdate"
-                    root.manager.transition.direction = "right"
-
-
+                    root.manager.transition.direction = "right"           
+                    
                     
 
 <Last_Screen>:
@@ -338,7 +346,7 @@ WindowManager:
         Label:
             text: "Copying your photos was succesful!"
             color: [0,0,0,1]
-            font_size: "16sp"
+            font_size: "20sp"
         
         Image:
             source: 'copy_icon.png'
@@ -357,6 +365,7 @@ WindowManager:
                 text: "Go Back to Start"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
+                    root.reset_count()
                     app.root.current = "start"
                     root.manager.transition.direction = "right"
 
