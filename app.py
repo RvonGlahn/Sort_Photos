@@ -1,13 +1,13 @@
 '''
-on-Release Button blinken und text = "copying"
-Windows für alle Funktionen
-datepicker Kontrolle einfügen
-images folder erstellen getcwd + add to path
+add exif data
+open copied fotos
 '''
 import os
 import kivy
 import GlobalVar
 import sort_foto
+import datetime
+import time
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -49,18 +49,85 @@ class Window_DateInfo(Screen):
             sm.current = "sortdate"
         
     def date_startparse(self):
-        sort_foto.parse_fotos(GlobalVar.path_origin, GlobalVar.path_destination, GlobalVar.count)
-        
+        '''
+        Sets
+        -------
+        Label Texts in "Sortdate" with parsed info from function sort_foto.parse_fotos
+
+        '''
+        sort_foto.parse_fotos(GlobalVar.path_origin, GlobalVar.path_destination, GlobalVar.count)           
         
         sortdate = self.manager.get_screen('sortdate')
         sortdate.ids.l_date_num_images.text = str(GlobalVar.count.count_images)
-        sortdate.ids.l_date_num_noexif.text = str(GlobalVar.count.count_noexif_date)
-        sortdate.ids.l_date_num_noloc.text = str(GlobalVar.count.count_images-GlobalVar.count.count_gps)
+        sortdate.ids.l_date_num_noexif.text = str(GlobalVar.count.count_noexif_date)+" (" + str(int(GlobalVar.count.count_noexif_date*100/GlobalVar.count.count_images))+ "%)"
+        sortdate.ids.l_date_num_noloc.text = str(GlobalVar.count.count_images-GlobalVar.count.count_gps)+" (" + str(int((GlobalVar.count.count_images-GlobalVar.count.count_gps)*100/GlobalVar.count.count_images))+ "%)"
         sortdate.ids.l_date_num_videos.text = str(GlobalVar.count.count_videos)
         sortdate.ids.l_date_num_memory.text = str(int(GlobalVar.count.memory_size_MB))
+
+   
+class Add_Exif(Screen):
+    
+    def get_datelist(self):
+        ''' 
+        Iterate over photos to find ones without exif date. Get Infos from User and store them in no_date_list 
+        info[0]: path to image , info[3]: Boolean-> False if no Exif data
+        '''
+        if not GlobalVar.no_date_list:
+            for date, photos in GlobalVar.count.search_dict_date.items():
+                for info in photos:
+                    if info[3] == False:                 
+                        GlobalVar.no_date_list.append([info[0],info[3]])
+                        
+    def next_image(self):
+        ''' loads newimage in GUI and sets True for all images skipped or not'''
+        count = 0
+        for path , check in GlobalVar.no_date_list:
+            if check == False:
+                self.ids.image_exif.source = path
+                GlobalVar.exif_path = path
+                GlobalVar.no_date_list[count][1] = True
+                break
+            count += 1
+                    
+    def set_exif(self,year,month,day):
+        '''
         
+        Parameters
+        ----------
+        year : String
+        month : String
+        day : String
+
+        Exception 
+        -------
+        ValueError opens a Pop Up to demand correct inputs
+        If input correct sort_foto.add_exif adds exif date to Image
+        '''
+        try: 
+            if int(year) and int(month) and int(day):
+                if len(year)==4 and len(month)<=2 and len(day)<=2:
+                    sort_foto.add_exif(GlobalVar.exif_path, datetime.datetime(int(year),int(month),int(day)))
+                    self.ids.year.text = ""
+                    self.ids.month.text = ""
+                    self.ids.day.text = ""
+                else:
+                    popupp = Popup(title='Reminder', content=Label(text='Please insert numbers for \nyear, month and day.',font_size = "16sp"),size_hint=(None, None), size=(300, 300))
+                    popupp.open()
+        except ValueError:        
+            popup = Popup(title='Reminder', content=Label(text='Please insert numbers for \nyear, month and day.',font_size = "16sp"),size_hint=(None, None), size=(300, 300))
+            popup.open()
+        def reset_exif(self):
+            self.ids.image_exif.source = 'images/exif_picture.png'
+            GlobalVar.no_date_list.clear()
+        def reset_count(self):
+            '''Delete Count for clearing the foto data befor analyzing new Photos '''
+            del (GlobalVar.count)
+            GlobalVar.count = sort_foto.Data_info()
+
+
 
 class Window_SortDate(Screen):
+    
     def date_startsort(self):
         sort_foto.build_folder_structure(GlobalVar.path_destination, GlobalVar.count.dict_years,GlobalVar.count.list_years_videos)
         sort_foto.copy_file_date(GlobalVar.count)
@@ -70,11 +137,21 @@ class Window_SortDate(Screen):
         sort_foto.copy_file_loc(GlobalVar.count)
         
     def reset_count(self):
+        '''Delete Count for clearing the foto data befor analyzing new Photos '''
         del (GlobalVar.count)
         GlobalVar.count = sort_foto.Data_info()
+        
+        
 
 class My_Filechooser(Screen):
     def open(self, path):
+        '''
+        
+        Parameters
+        ----------
+        path : string
+            Set Path to origin and destination in DateInfo, depends on GlobalVar.path_type
+        '''
         if GlobalVar.path_type == "origin":
             GlobalVar.path_origin = path
             infodate = self.manager.get_screen('dateinfo')
@@ -85,18 +162,72 @@ class My_Filechooser(Screen):
             infodate.ids.l_date_dest_filepath.text = path
 
 
+
 class Search_Date(Screen):
-    pass
+
+    def search_date(self,start_date, end_date):
+        '''
+        Parameters
+        ----------
+        start_date : String
+            string of integers "2017-12-31"
+        end_date : String
+            string of integers "2017-02-01"
+
+        Opens
+        -------
+        search_date
+            function to search photos between start and end date
+        '''
+        check1 = self.check_input(start_date)
+        check2 = self.check_input(end_date)
+        if check1 == True and check2 == True:
+            sort_foto.search_date(GlobalVar.count, GlobalVar.path_origin, start_date, end_date)
+            sm.current = "last_screen"
+        else:
+            popup_search1 = Popup(title='Reminder', content=Label(text='Please enter the date correctly. \nYYYY-MM-DD \nExample: 2020-04-12',
+                                                                         font_size = "16sp"),size_hint=(None, None), size=(300, 300))
+            popup_search1.open()
+    
+    def check_input(self, date_string):
+        '''
+        Parameters
+        ----------
+        date_string : string
+            Needs to be String of Integers example 2017-
+
+        Returns
+        -------
+        bool
+            Boolean wheater the input is in correct 
+
+        '''
+        try:
+            year,month,day = date_string.split("-")
+            try: 
+                if int(year) and int(month) and int(day):
+                    if len(year)==4 and len(month)==2 and len(day)==2:
+                        return True
+                    else:    
+                        return False
+            except ValueError:
+                 return False        
+        except ValueError:
+            return False
+            
 
 
 class Last_Screen(Screen):
     def reset_count(self):
+        '''Delete Count for clearing the foto data befor analyzing new Photos '''
         del (GlobalVar.count)
         GlobalVar.count = sort_foto.Data_info()
-
+        
+        
 
 class WindowManager(ScreenManager):
     pass
+
 
 
 class SortApp(App):
@@ -109,7 +240,7 @@ if __name__ == '__main__':
     kv = Builder.load_file("sort.kv")
     sm = WindowManager()
 
-    screens = [Start_Window(name="start"), Window_DateInfo(name="dateinfo"), My_Filechooser(name ="my_filechooser"), Window_SortDate(name="sortdate"),
+    screens = [Start_Window(name="start"), Window_DateInfo(name="dateinfo"), My_Filechooser(name ="my_filechooser"), Add_Exif(name="addexif"), Window_SortDate(name="sortdate"),
                Search_Date(name="searchdate"),Last_Screen(name="last_screen")]
     for screen in screens:
         sm.add_widget(screen)

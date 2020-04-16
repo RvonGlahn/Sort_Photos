@@ -2,7 +2,7 @@ import PIL
 #import PIL.Image as PILimage
 #from PIL import ImageDraw, ImageFont, ImageEnhance
 from PIL.ExifTags import TAGS
-
+import piexif
 from datetime import datetime, timedelta
 import os
 import shutil
@@ -11,13 +11,12 @@ from geopy.geocoders import Nominatim
 
 '''
 Anpassungen:
-GUI kivy
-exif Daten in Bildern ergänzen
 pytoexe
 pytoapp
 Objekterkennung
  - Freunde finden
  - Selfies
+ - Datum schätzen
 GAN - Freunde erstellen
 '''
 
@@ -76,6 +75,7 @@ class Data_info:
         info.append(image_data.path_origin)
         info.append(image_data.path_dest)
         info.append(image_data.name)
+        info.append(image_data.has_exifdate)
         
         if key in self.search_dict_date:
             self.search_dict_date[key].append(info)
@@ -156,6 +156,7 @@ class Fotoinfo:
     def __init__(self, img,image_name, path_dest, path_origin,count):
         self.name = image_name
         self.foto = img
+        self.has_exifdate = False
         self.path_dest = path_dest
         self.path_origin = path_origin
         self.exif_data = self.get_exif_data(count)
@@ -193,6 +194,7 @@ class Fotoinfo:
             #b = self.exif_data
             if 'DateTime' in self.exif_data:
                 date_and_time = self.exif_data['DateTime']
+                self.has_exifdate = True
                 count.count_date += 1
                 return date_and_time
             else:    
@@ -281,7 +283,7 @@ def set_filepaths():
     origin: folder from which you import the pictures
     destintion: folder where you will save the new folder structure
     '''
-    origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Mi 9 SE"
+    origin = r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Test"
     destination = r"C:\Users\Rasmus\Desktop\Rasmus\Photos"
     search = r"C:\Users\Rasmus\Desktop\Rasmus\Photos\search"
     return origin, destination, search
@@ -379,22 +381,24 @@ def search_date(count,path_dest_date,start_date,end_date = False):
             return False
 
 def copy_file_loc(count):
-    for keys, infos in count.search_dict_loc.items():
+    '''
+    copy file from origin to destination
+    first images second vidoes
+    '''
+    for keys, infos in count.search_dict_loc.items():                           # iterate over all locations
         year,country,city = keys.split("-")
-        for image_info in infos:
+        for image_info in infos:                                                #iterate over all photos in list
             if country == "Germany":
                 path_dest= os.path.join(image_info[1], str(year), country, city)
             else:
                 path_dest= os.path.join(image_info[1], str(year),country)
             path_origin = image_info[0]
-            #if not os.path.exists(os.path.join(path_dest, file_name)):         
             shutil.copy2(path_origin, path_dest)
     
     for year, infos in count.search_dict_date_video.items():
         for video_info in infos:
             path_dest= os.path.join(video_info[1],"videos",str(year))
             path_origin = video_info[0]
-            #if not os.path.exists(os.path.join(path_dest, file_name)):         
             shutil.copy2(path_origin, path_dest)
         
         
@@ -514,7 +518,30 @@ def parse_fotos(path_origin, path_destination, count):
         for subDir in subDirectories:               # nach und nach die einzelnen SUb Directories absuchen            
             get_images(os.path.join(directory, subDir),path_destination, count)           # alle images einzeln auswerten
         
+def add_exif(file, datetime_object):
+    img = PIL.Image.open(file)
 
+    try:
+		# If the image already contains data, we only replace the relevant properties
+        exif_dict = piexif.load(img.info['exif'])
+        print(f"Exif load for file '{file}'' successful")
+    except KeyError:
+		# If the image has no Exif data, we create the relevant properties
+        f_dict = {}
+        f_dict["0th"] = {}
+        f_dict["Exif"] = {}
+    try:
+    	# We now have a useful Exif dict, time to adjust the values
+        d = datetime_object.strftime("%Y:%m:%d %H:%M:%S")
+        exif_dict["Exif"][36868] = d.encode("utf-8")
+        exif_dict["Exif"][36867] = d.encode("utf-8")
+        exif_dict["0th"][306] = d.encode("utf-8")
+    
+    	# Convert into bytes and dump into file
+        exif_bytes = piexif.dump(exif_dict)
+        piexif.insert(exif_bytes, file)
+    except:
+        print("Failed")
 
                 
 def main():
@@ -528,8 +555,11 @@ def main():
     
     #search_date(count, search_path,"2017-10-17")
     
-    build_folder_structure_loc(path_destination, count.dict_locations,count.list_years_videos)
-    copy_file_loc(count)
+    #build_folder_structure_loc(path_destination, count.dict_locations,count.list_years_videos)
+    #copy_file_loc(count)
+                
+    
+    add_exif(r"C:\Users\Rasmus\Desktop\Rasmus\Fotos\Smartphone\Test\IMG_0010.JPG", datetime(2014, 1, 1))
     
     
     ''' Info Section '''

@@ -2,6 +2,7 @@ WindowManager:
     Start_Window:
     Window_DateInfo:
     My_Filechooser:
+    Add_Exif:
     Window_SortDate:
     Search_Date:
     Last_Screen:
@@ -115,7 +116,12 @@ WindowManager:
             RoundedButton:
                 text: "Analyze Photos"
                 back_color: (0.157, 0.455, 0.753, 1.0)
+                on_press:
+                    self.back_color = (0.157, 0.455, 0.753, 0.7)
+                    self.text = "Analyzing ..."
                 on_release:
+                    self.back_color = (0.157, 0.455, 0.753, 1.0)
+                    self.text = "Analyze Photos"
                     root.manager.transition.direction = "left"    
                     root.check_path()
                     
@@ -161,24 +167,137 @@ WindowManager:
             
             RoundedButton:
                 back_color: (0.157, 0.455, 0.753, 1.0)
-                text: "open"
+                text: "Open"
                 on_release: 
                     my_filechooser.open(filechooser.path)
                     app.root.current = "dateinfo"
                     root.manager.transition.direction = "right"
 
             RoundedButton:
-                text: "Go Back"
+                text: "Close"
                 back_color: (0.157, 0.455, 0.753, 1.0)
                 on_release:
                     app.root.current = "dateinfo"
                     root.manager.transition.direction = "right"
+<Add_Exif>:
+    name: "addexif"
+    GridLayout:
+        rows: 4
+        size: root.width, root.height
+        padding: [30, 10]
+        spacing: [20,20]
         
+        GridLayout:       
+            cols: 1
+            padding: [40, 10]
+            spacing: [10,10]
+            row_default_height: "20dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            Label:                
+                id: estimated_date
+                text: "Click 'Load Photos' to start the Process."
+                color: [0,0,0,0.9]
+                font_size: "16sp"
+            
+        Image:
+            id: image_exif
+            source: 'images/exif_picture.png'
+            size_hint_x: 0.8
+            allow_stretch: True
+        
+        GridLayout:       
+            cols: 6
+            padding: [80, 10]
+            spacing: [10,10]
+            row_default_height: "40dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            Label:
+                text: "Year:"
+                color: [0,0,0,1]
+                padding_y: 8
+            TextInput:
+                id: year
+                multiline: False
+                text: ""
+                size_hint: [None,None]
+                height: self.minimum_height
+                width: 60
+                focus: True
+                padding: 8
+            Label:
+                text: "Month:"
+                color: [0,0,0,1]
+                padding_y: 8
+            TextInput:
+                id: month
+                multiline: False
+                text: ""
+                size_hint: [None,None]
+                height: self.minimum_height
+                width: 40
+                padding: 8
+            Label:
+                text: "Day:"
+                color: [0,0,0,1]
+                padding_y: 8
+            TextInput:
+                id: day
+                multiline: False
+                text: ""
+                size_hint: [None,None]
+                height: self.minimum_height
+                width: 40
+                padding: 8
+        
+        GridLayout:
+            cols: 3
+            padding: [40, 0 , 40 ,20]
+            spacing: [20,10]
+            row_default_height: "50dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            
+            RoundedButton:
+                text: "Load Photos"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_press:
+                    self.text = "Next"
+                    self.back_color = (0.157, 0.455, 0.753, 0.8)
+                on_release:
+                    root.get_datelist()
+                    root.next_image()
+                    self.back_color = (0.157, 0.455, 0.753, 1)
+                    
+            RoundedButton:
+                text: "Save Date"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_press:
+                    self.back_color = (0.157, 0.455, 0.753, 0.8)
+                on_release:
+                    root.set_exif(year.text, month.text, day.text)
+                    self.back_color = (0.157, 0.455, 0.753, 1)
+
+            RoundedButton:
+                text: "Go Back"
+                back_color: (0.157, 0.455, 0.753, 1.0)
+                on_release:
+                    root.reset_exif()
+                    root.reset_count()
+                    app.root.current = "dateinfo"
+                    root.manager.transition.direction = "right"
+    
         
 <Window_SortDate>:
     name: "sortdate"
     GridLayout:
-        rows: 2
+        rows: 4
         size: root.width, root.height
         padding: [20, 20, 20, 0]
         spacing: [20,20]
@@ -227,10 +346,38 @@ WindowManager:
                 id: l_date_num_memory
                 color: [0,0,0,1]
                 text: ""              
-    
+                
+        GridLayout:
+            cols: 1
+            padding: [200, 0]
+            spacing: [20,10]
+            row_default_height: "30dp"
+            row_force_default: True
+            size_hint_y: None
+            height: self.minimum_height
+            color: (0.157, 0.455, 0.753, 1)   
+            
+            RoundedButton:
+                text: "Add Info"
+                back_color: (0.424, 0.478, 0.537, 1)
+                border_radius: [10]    
+                on_release:
+                    app.root.current = "addexif"
+                    root.manager.transition.direction = "left"
+        
+        Label:
+            canvas.before:
+                Color: 
+                    rgba: (0,0,0,0.5)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            size_hint_y: None
+            height: 1
+        
         GridLayout:
             cols: 2
-            padding: [40, 40]
+            padding: [40, 0 , 40 , 40]
             spacing: [20,20]
             row_default_height: "50dp"
             row_force_default: True
@@ -240,6 +387,9 @@ WindowManager:
             RoundedButton:
                 text: "Sort by Date"
                 back_color: (0.157, 0.455, 0.753, 1.0)
+                on_press:
+                    self.back_color = (0.157, 0.455, 0.753, 0.7)
+                    self.text = "Sorting ..."
                 on_release:
                     root.date_startsort()
                     app.root.current = "last_screen"
@@ -255,6 +405,9 @@ WindowManager:
             RoundedButton:
                 text: "Sort by Location"
                 back_color: (0.157, 0.455, 0.753, 1.0)
+                on_press:
+                    self.back_color = (0.157, 0.455, 0.753, 0.7)
+                    self.text = "Sorting ..."
                 on_release:
                     root.location_startsort()
                     app.root.current = "last_screen"
@@ -322,9 +475,15 @@ WindowManager:
             RoundedButton:
                 text: "Search and Copy"
                 back_color: (0.157, 0.455, 0.753, 1.0)
+                on_press:
+                    self.back_color = (0.157, 0.455, 0.753, 0.7)
+                    self.text = "Searching ..."
                 on_release:
-                    app.root.current = "last_screen"
-                    root.manager.transition.direction = "left"    
+                    self.text = "Search and Copy"
+                    self.back_color = (0.157, 0.455, 0.753, 0.7)
+                    root.manager.transition.direction = "left"
+                    root.search_date(startdate.text,enddate.text)
+                        
 
             RoundedButton:
                 text: "Go Back"
@@ -349,7 +508,7 @@ WindowManager:
             font_size: "20sp"
         
         Image:
-            source: 'copy_icon.png'
+            source: 'images/copy_icon.png'
             size: self.texture_size
             
         GridLayout:
@@ -381,4 +540,4 @@ WindowManager:
         RoundedRectangle:
             size:self.size
             pos: self.pos
-            radius: self.border_radius                    
+            radius: self.border_radius        
