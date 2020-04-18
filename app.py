@@ -1,6 +1,6 @@
 '''
-add exif data
 open copied fotos
+tab through inputfields
 '''
 import os
 import kivy
@@ -116,13 +116,15 @@ class Add_Exif(Screen):
         except ValueError:        
             popup = Popup(title='Reminder', content=Label(text='Please insert numbers for \nyear, month and day.',font_size = "16sp"),size_hint=(None, None), size=(300, 300))
             popup.open()
-        def reset_exif(self):
-            self.ids.image_exif.source = 'images/exif_picture.png'
-            GlobalVar.no_date_list.clear()
-        def reset_count(self):
-            '''Delete Count for clearing the foto data befor analyzing new Photos '''
-            del (GlobalVar.count)
-            GlobalVar.count = sort_foto.Data_info()
+            
+    def reset_exif(self):
+        self.ids.image_exif.source = 'images/exif_picture.png'
+        GlobalVar.no_date_list.clear()
+        
+    def reset_count(self):
+        '''Delete Count for clearing the foto data befor analyzing new Photos '''
+        del (GlobalVar.count)
+        GlobalVar.count = sort_foto.Data_info()
 
 
 
@@ -182,7 +184,7 @@ class Search_Date(Screen):
         check1 = self.check_input(start_date)
         check2 = self.check_input(end_date)
         if check1 == True and check2 == True:
-            sort_foto.search_date(GlobalVar.count, GlobalVar.path_origin, start_date, end_date)
+            sort_foto.search_date(GlobalVar.count, GlobalVar.path_destination, start_date, end_date)
             sm.current = "last_screen"
         else:
             popup_search1 = Popup(title='Reminder', content=Label(text='Please enter the date correctly. \nYYYY-MM-DD \nExample: 2020-04-12',

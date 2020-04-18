@@ -411,7 +411,8 @@ WindowManager:
                 on_release:
                     root.location_startsort()
                     app.root.current = "last_screen"
-                    root.manager.transition.direction = "left"    
+                    root.manager.transition.direction = "left"  
+                    back_color: (0.157, 0.455, 0.753, 1.0)
 
             RoundedButton:
                 text: "Go Back"
@@ -480,7 +481,7 @@ WindowManager:
                     self.text = "Searching ..."
                 on_release:
                     self.text = "Search and Copy"
-                    self.back_color = (0.157, 0.455, 0.753, 0.7)
+                    self.back_color = (0.157, 0.455, 0.753, 1)
                     root.manager.transition.direction = "left"
                     root.search_date(startdate.text,enddate.text)
                         
