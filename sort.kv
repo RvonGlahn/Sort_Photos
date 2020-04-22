@@ -198,7 +198,7 @@ WindowManager:
             
             Label:                
                 id: estimated_date
-                text: "Click 'Load Photos' to start the Process."
+                text: "Click Load Photos to start the Process."
                 color: [0,0,0,0.9]
                 font_size: "16sp"
             
@@ -223,6 +223,7 @@ WindowManager:
                 padding_y: 8
             TextInput:
                 id: year
+                write_tab: False
                 multiline: False
                 text: ""
                 size_hint: [None,None]
@@ -236,6 +237,7 @@ WindowManager:
                 padding_y: 8
             TextInput:
                 id: month
+                write_tab: False
                 multiline: False
                 text: ""
                 size_hint: [None,None]
@@ -248,6 +250,7 @@ WindowManager:
                 padding_y: 8
             TextInput:
                 id: day
+                write_tab: False
                 multiline: False
                 text: ""
                 size_hint: [None,None]
@@ -439,6 +442,7 @@ WindowManager:
                 pos_hint: {'x': 0.2, 'top':.7}
                 padding_y: 8
             TextInput:
+                write_tab: False
                 id: startdate
                 multiline: False
                 text: "  YYYY-MM-DD"
@@ -455,6 +459,7 @@ WindowManager:
                 pos_hint: {'x': 0.2 , 'top':.45}
                 padding_y: 8
             TextInput:
+                write_tab: False
                 id: enddate
                 multiline: False
                 text: "  YYYY-MM-DD"

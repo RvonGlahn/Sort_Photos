@@ -3,6 +3,7 @@ open copied fotos
 tab through inputfields
 '''
 import os
+import sys
 import kivy
 import GlobalVar
 import sort_foto
@@ -235,10 +236,18 @@ class WindowManager(ScreenManager):
 class SortApp(App):
     def build(self):
         return sm
+ 
     
+def resourcePath():
+    '''Returns path containing content - either locally or in pyinstaller tmp file'''
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS)
+
+    return os.path.join(os.path.abspath("."))
     
     
 if __name__ == '__main__':
+    kivy.resources.resource_add_path(resourcePath()) 
     kv = Builder.load_file("sort.kv")
     sm = WindowManager()
 
