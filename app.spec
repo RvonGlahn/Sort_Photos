@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(['app.py'],
-             pathex=['C:\\Users\\Rasmus\\Desktop\\Programmieren\\Python\\sort_foto_date'],
+             pathex=['C:\\Users\\rasmu\\PycharmProjects\\Sort_Photos'],
              binaries=[],
              datas=[],
              hiddenimports=['win32timezone'],
@@ -22,17 +22,17 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='app',
+          name='PhotoSort',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
-coll = COLLECT(exe, Tree('C:\\Users\\Rasmus\\Desktop\\Programmieren\\Python\\sort_foto_date\\'),
+          console=False)
+coll = COLLECT(exe, Tree('C:\\Users\\rasmu\\PycharmProjects\\Sort_Photos\\'),
                a.binaries,
                a.zipfiles,
                a.datas,
                *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins )],
                strip=False,
                upx=True,
-               name='app')
+               name='PhotoSort')
